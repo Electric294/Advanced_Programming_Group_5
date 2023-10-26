@@ -10,8 +10,8 @@
 using namespace std;//Set namespace to std
 
 geometry_msgs::Twist velCommand; // Linear and angular velocity in m/s 
-geometry_msgs::Pose2D current; // Used to find the current x and y position of the turtle
-geometry_msgs::Pose2D desired; // Used to establish the desired x and y position of the turtle
+geometry_msgs::Pose2D current; // Used to find the current coordinates of the turtle
+geometry_msgs::Pose2D desired; // Used to establish the desired coordinates of the turtle
 
 const double distanceTolerance = 0.01; // Used to say how close in meters is okay to say the turtle is at the goal
  
