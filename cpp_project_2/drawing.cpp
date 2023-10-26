@@ -24,8 +24,6 @@ void setup() {
   velCommand.angular.y = 0.0;
   velCommand.angular.z = 0.0;
 }
-
-void goToGoals(){}
  
 // Used to get the distance between the current x coordinate and the desired x coordinate
 double getDistanceToGoal() {
@@ -36,11 +34,6 @@ double getDistanceToGoal() {
 double getYDistanceToGoal() {
   return desired.y - current.y;
 }
-
-/*
-void setAngle(double a){
-    velCommand.angular.z = a;
-}*/
 
 // Sets the velocity of the turtle, stopping if it is at the goal
 void setVelocity() {
