@@ -5,18 +5,13 @@
 #include "geometry_msgs/Twist.h" // Used to establish linear and angular velocity like before
 #include "geometry_msgs/Pose2D.h" // x, y position and theta orientation
 #include "turtlesim/Pose.h" // Used to find current pose
-#include <turtlesim/SetPen.h>
-#include <std_msgs/String.h>
-#include <turtlesim/TeleportAbsolute.h>
-//#include "turtlesim/SetPen.h
-//#include "turtlesim/TeleportAbsolute.h"
+#include <turtlesim/SetPen.h>//Used to lift the pen off the canvas and set color
 
 using namespace std;//Set namespace to std
 
 geometry_msgs::Twist velCommand; // Linear and angular velocity in m/s 
 geometry_msgs::Pose2D current; // Used to find the current x and y position of the turtle
 geometry_msgs::Pose2D desired; // Used to establish the desired x and y position of the turtle
-
 
 const double distanceTolerance = 0.01; // Used to say how close in meters is okay to say the turtle is at the goal
  
@@ -29,6 +24,8 @@ void setup() {
   velCommand.angular.y = 0.0;
   velCommand.angular.z = 0.0;
 }
+
+void goToGoals(){}
  
 // Used to get the distance between the current x coordinate and the desired x coordinate
 double getDistanceToGoal() {
@@ -40,9 +37,10 @@ double getYDistanceToGoal() {
   return desired.y - current.y;
 }
 
+/*
 void setAngle(double a){
     velCommand.angular.z = a;
-}
+}*/
 
 // Sets the velocity of the turtle, stopping if it is at the goal
 void setVelocity() {
@@ -51,8 +49,8 @@ void setVelocity() {
   if ((abs(getDistanceToGoal()) > distanceTolerance) || (abs(getYDistanceToGoal() > distanceTolerance))) {
  
     //The linear velocity of the turtle is established, slowing down as it gets distance gets smaller
-    velCommand.linear.x = getDistanceToGoal();
-    velCommand.linear.y = getYDistanceToGoal();
+    velCommand.linear.x = 2 * getDistanceToGoal();
+    velCommand.linear.y = 2 * getYDistanceToGoal();
   }
   else {
     //Stops the turtle if it is at the goal
@@ -75,31 +73,21 @@ void updatePose(const turtlesim::PoseConstPtr &currentPose) {
  
 int main(int argc, char **argv) {
 
-
-
-  //Initializes the linear and angular velocity
+  // Initializes the linear and angular velocity using previously declared function
   setup(); 
 
-  //Initializes the desired coordinates to be (9, 5.5444) 
-  desired.x = 9;
-  desired.y = 5.5444; //Note that the starting position of the turtle is at (5.5444, 5.5444)
- 
   // Initiate ROS
   ros::init(argc, argv, "go_to_goal_x");
      
   // Creates a node handle
   ros::NodeHandle node;
 
- // turtlesim:TeleportAbsolute telport_pose;//Used to teleport the t
- 
-   // ros::ServiceClient client_pose;
+  // Creates a service server that tracks the pen state (on or off and color)
+  turtlesim::SetPen pen_state;
 
-   ros::ServiceClient pen = node.serviceClient<turtlesim::SetPen>("/turtle1/set_pen");
+  // Creates a service client to call the pen state server and reflect it on the turtle
+  ros::ServiceClient pen = node.serviceClient<turtlesim::SetPen>("/turtle1/set_pen");
 
-    turtlesim::SetPen pen_state;
-
-
-  //client_pose = node.serviceClient<turtlesim::TeleportAbsolute>("/turtle1/teleport_absolute");
  
   // Subscribe to the turtle's pose, allowing it to be updated
   ros::Subscriber currentPoseSub = node.subscribe("turtle1/pose", 0, updatePose);
@@ -107,74 +95,84 @@ int main(int argc, char **argv) {
   // Create a publisher that publishes velocity commands to the turtle.
   ros::Publisher velocityPub = node.advertise<geometry_msgs::Twist>("turtle1/cmd_vel", 0);
   
-  // Sets the loop rate to 10 cycles per second
 
-    float coordinates [50][2] = {{6.5,5.55},{6.5,6.5},{5.5,6.5},{5.45,5.45},//square one
-                                 {5.5,3.5},{6.5,4},{6.49,5},{5.5,5},{5.49,3},//teleport to square two (5.5,5)
-                                 {4.5,7},{6.75,7},{7.25,6.5},//Beginning of b
-                                 {7.27,5.75},{6.75,5.25},{7.25,4.75},{7.27,4}, {6.75,3.5},//
-                                 {4.5,3.5},{5,4},{4.9,6.5},{4.5,7},//
-                                 {4,7.5},{5,7.75},{7,7.75},{7.75,7.5},{7.78,2.5},{7.25,3},{6.75,2.75},//
-                                 {6,2.5},{5,2.75},{4.5,3},{4,3.5},{4,7.5}};//teleport to shield
+  // Creates a multidimensional array that notes the desired coordinates of the Bradley shape
+  float coordinates [33][2] = {{6.5,5.55},{6.5,6.5},{5.5,6.5},{5.45,5.45},//square one
+                                 {5.5,3.55},{6.5,4},{6.49,5},{5.5,5},{5.49,2.95},//square two
+                                 {4.5,7},{6.75,7},{7.25,6.5},//B shape beginning
+                                 {7.27,5.75},{6.75,5.25},{7.25,4.75},{7.27,4}, {6.75,3.5},//B shape continued
+                                 {4.5,3.5},{5,4},{4.9,6.5},{4.5,7},//B shape continued
+                                 {4,7.5},{5,7.75},{7,7.75},{7.75,7.5},{7.78,2.5},{7.25,3},{6.75,2.75},//B shape final
+                                 {6,2.5},{5,2.75},{4.5,3},{4,3.5},{4,7.5}};//shield shape
  
-
+  // Sets the loop rate to 10 cycles per second
   ros::Rate loop_rate(10); 
-/*
-    teleport_pose.request.x = 1.0;
-    teleport_pose.request.y = 1.0;
-    teleport_pose.request.theta = 0.0;*/
 
+  //Set a counter variable to iterate through the multidimensional array
   int i;
 
-pen_state.request.off = 0;
-pen_state.request.r = 255;
-pen_state.request.g = 255;
-pen_state.request.b = 255;
+  // Turns the pen state on and sets the color to white using max RGB values
+  pen_state.request.off = 0;
+  pen_state.request.r = 255;
+  pen_state.request.g = 255;
+  pen_state.request.b = 255;
 
-pen.call(pen_state);
-
-
-  for (i = 0; i < 4; i++){
-    cout << coordinates [i][0] << "\n";
-    cout << coordinates [i][1]<< "\n\n";
-
-    desired.x = coordinates [i][0];
-    desired.y = coordinates [i][1];
- 
-    // Keep running the while loop below as long as the ROS Master is active. 
-    while (ros::ok()) {
-    
-        // Listens if ros is still ok
-        ros::spinOnce();
-    
-        // Update the velocities of the turtle using previous function
-        setVelocity();
-    
-        // Publish these velocities to velCommand
-        velocityPub.publish(velCommand);
-    
-        // Not entirely sure why, but without setting the loop rate to sleep(),
-        // the turtle does not go the correct directions
-        loop_rate.sleep();
-
-        // Break the while loop if the turtle is at the goal
-        if (atTheGoal())
-            break;
-    }
-  }
-
-  pen_state.request.off = 1;
+  // Has the client call the pen state and reflect it on the turtle
   pen.call(pen_state);
 
-  i=4;
+  // Sets up a for loop iterating through the first 4 coordinates that represent the first square
+  for (i = 0; i < 4; i++){
+    /*
+    // Prints the coordinates to the terminal
+    cout << coordinates [i][0] << "\n";
+    cout << coordinates [i][1]<< "\n\n";*/
 
+    // Sets the desired coordinates (goal) to be the coordinates found in the array that i is iterating through 
+    desired.x = coordinates [i][0];
+    desired.y = coordinates [i][1];
+ 
+    // This while loop moves the turtle to the goal while the ROS master is active
+    while (ros::ok()) {
+    
+        // Listens if ros is still active
+        ros::spinOnce();
+    
+        // Sets the linear velocity of the turtle using previous function that stops if at the goal
+        setVelocity();
+    
+        // Use the velocityPub publisher to publish the state of velCommand (the turtle) to the topic of turtle1/cmd_vel
+        velocityPub.publish(velCommand);
+    
+        // Not entirely sure why, but without setting the loop rate to sleep(),
+        // the turtle does not go the correct directions
+        loop_rate.sleep();
+
+        // Break the while loop if the turtle is at the goal
+        if (atTheGoal())
+            break;
+    }
+  }
+
+
+// Turns the pen state to off
+pen_state.request.off = 1;
+
+// Publishes this pen state to pen
+pen.call(pen_state);
+
+// Set the iterator to be the coordinate the turtle will move to with no drawing
+i=4;
+
+// Print the coordinates to the terminal
+/*
 cout << coordinates [i][0] << "\n";
-cout << coordinates [i][1]<< "\n\n";
+cout << coordinates [i][1]<< "\n\n";*/
 
+// Set the coordinates be the 4th set of coordinates
 desired.x = coordinates [i][0];
 desired.y = coordinates [i][1];
 
-// Keep running the while loop below as long as the ROS Master is active. 
+// While loop to move the turtle to this goal, where the next shape starts
 while (ros::ok()) {
 
     // Listens if ros is still ok
@@ -195,24 +193,28 @@ while (ros::ok()) {
         break;
 }
 
+// Sets the pen_state to be on
 pen_state.request.off = 0;
-pen_state.request.r = 255;
-pen_state.request.g = 255;
-pen_state.request.b = 255;
 
+// Publishes the pen_state to pen
 pen.call(pen_state);
  
+// For loop to iterate through coordinates 5 - 8, which represents the second square
 for (i = 5; i < 9; i++){
-    cout << coordinates [i][0] << "\n";
-    cout << coordinates [i][1]<< "\n\n";
 
+    /*
+    // Print the coordinates to the terminal
+    cout << coordinates [i][0] << "\n";
+    cout << coordinates [i][1]<< "\n\n";*/
+
+    // Sets the desired coordinates (goal) to be the coordinates found in the array that i is iterating through 
     desired.x = coordinates [i][0];
     desired.y = coordinates [i][1];
  
-    // Keep running the while loop below as long as the ROS Master is active. 
+    // While loop to move the turtle to each set of coordinates
     while (ros::ok()) {
     
-        // Listens if ros is still ok
+        // Listens if ros is still running
         ros::spinOnce();
     
         // Update the velocities of the turtle using previous function
@@ -231,21 +233,28 @@ for (i = 5; i < 9; i++){
     }
   }
 
+// Turns the pen state to off
 pen_state.request.off = 1;
+
+// Publishes this pen state to pen
 pen.call(pen_state);
 
+// Sets i to be the set of coordinates to move to without drawing
 i=9;
 
+// Prints the coordinates to the terminal
+/*
 cout << coordinates [i][0] << "\n";
-cout << coordinates [i][1]<< "\n\n";
+cout << coordinates [i][1]<< "\n\n";*/
 
+// Set the coordinates be the 9th set of coordinates
 desired.x = coordinates [i][0];
 desired.y = coordinates [i][1];
 
-// Keep running the while loop below as long as the ROS Master is active. 
+// While loop same as before to move the turtle until it is where the next shape will start
 while (ros::ok()) {
 
-    // Listens if ros is still ok
+    // Listens if ros is still running
     ros::spinOnce();
 
     // Update the velocities of the turtle using previous function
@@ -263,21 +272,24 @@ while (ros::ok()) {
         break;
 }
 
+// Set the pen_state to be back on
 pen_state.request.off = 0;
-pen_state.request.r = 255;
-pen_state.request.g = 255;
-pen_state.request.b = 255;
 
+// Publishes this pen state to pen
 pen.call(pen_state);
  
 for (i = 10; i < 21; i++){
-    cout << coordinates [i][0] << "\n";
-    cout << coordinates [i][1]<< "\n\n";
 
+    /*
+    // Prints the coordinates to the terminal
+    cout << coordinates [i][0] << "\n";
+    cout << coordinates [i][1]<< "\n\n";*/
+
+     // Sets the desired coordinates (goal) to be the coordinates found in the array that i is iterating through 
     desired.x = coordinates [i][0];
     desired.y = coordinates [i][1];
  
-    // Keep running the while loop below as long as the ROS Master is active. 
+    // While loop to move the turtle to each set of coordinates in the shape
     while (ros::ok()) {
     
         // Listens if ros is still ok
@@ -299,18 +311,25 @@ for (i = 10; i < 21; i++){
     }
   }
 
+// Sets the pen state to be off
 pen_state.request.off = 1;
+
+// Publishes this pen state to pen
 pen.call(pen_state);
 
+// Sets i to 21, the next set of coordinates to move to without drawing
 i=21;
 
+/*
+// Print this set of coordinates to the screen
 cout << coordinates [i][0] << "\n";
-cout << coordinates [i][1]<< "\n\n";
+cout << coordinates [i][1]<< "\n\n";*/
 
+// Set the goal to be these coordinates
 desired.x = coordinates [i][0];
 desired.y = coordinates [i][1];
 
-// Keep running the while loop below as long as the ROS Master is active. 
+// While loop to move the turtle to this set of coordinates
 while (ros::ok()) {
 
     // Listens if ros is still ok
@@ -331,22 +350,26 @@ while (ros::ok()) {
         break;
 }
 
+// Sets the pen state to back on
 pen_state.request.off = 0;
-pen_state.request.r = 255;
-pen_state.request.g = 255;
-pen_state.request.b = 255;
 
+// Publish this pen state to pen
 pen.call(pen_state);
 
-    for (i = 22; i < 33; i++){
-    cout << coordinates [i][0] << "\n";
-    cout << coordinates [i][1]<< "\n\n";
+// For loop to iterate through coordinates 22 - 33, the shape of the shield
+for (i = 22; i < 33; i++){
 
+    /*
+    // Print coordinates to the terminal
+    cout << coordinates [i][0] << "\n";
+    cout << coordinates [i][1]<< "\n\n";*/
+
+     // Sets the desired coordinates (goal) to be the coordinates found in the array that i is iterating through 
     desired.x = coordinates [i][0];
     desired.y = coordinates [i][1];
 
  
-    // Keep running the while loop below as long as the ROS Master is active. 
+    // While loop to move the turtle to each set of coordinates
     while (ros::ok()) {
     
         // Listens if ros is still ok
@@ -368,8 +391,6 @@ pen.call(pen_state);
     }
  
   }
-
-
 
   return 0;
 }
