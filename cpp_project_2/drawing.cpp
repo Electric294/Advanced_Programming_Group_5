@@ -39,7 +39,7 @@ double getYDistanceToGoal() {
 void setVelocity() {
 
   //If the x or y distances to the goal are greater than the distance tolerance, a velocity will be set
-  if ((abs(getDistanceToGoal()) > distanceTolerance) || (abs(getYDistanceToGoal() > distanceTolerance))) {
+  if (!atTheGoal()) {
  
     //The linear velocity of the turtle is established, slowing down as it gets distance gets smaller
     velCommand.linear.x = 2 * getDistanceToGoal();
