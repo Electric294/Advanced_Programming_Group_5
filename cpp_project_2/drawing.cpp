@@ -107,8 +107,8 @@ int main(int argc, char **argv) {
   // Turns the pen state on and sets the color to white using max RGB values
   pen_state.request.off = 0;
   pen_state.request.r = 255;
-  pen_state.request.g = 255;
-  pen_state.request.b = 255;
+  pen_state.request.g = 0;
+  pen_state.request.b = 0;
 
   // Has the client call the pen state and reflect it on the turtle
   pen.call(pen_state);
