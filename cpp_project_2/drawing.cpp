@@ -35,6 +35,11 @@ double getYDistanceToGoal() {
   return desired.y - current.y;
 }
 
+// Used to check if the turtle is at the goal by checking if the absolute value of the distance to goal is less than the tolerance
+bool atTheGoal(){
+    return (abs(getDistanceToGoal()) < distanceTolerance) && (abs(getYDistanceToGoal() < distanceTolerance));
+}
+
 // Sets the velocity of the turtle, stopping if it is at the goal
 void setVelocity() {
 
@@ -50,11 +55,6 @@ void setVelocity() {
     velCommand.linear.x = 0;
     velCommand.linear.y = 0;
   }
-}
-
-// Used to check if the turtle is at the goal by checking if the absolute value of the distance to goal is less than the tolerance
-bool atTheGoal(){
-    return (abs(getDistanceToGoal()) < distanceTolerance) && (abs(getYDistanceToGoal() < distanceTolerance));
 }
  
 // This updates the x and y position of the turtle as well as its theta (not entirely sure what that is in this context
