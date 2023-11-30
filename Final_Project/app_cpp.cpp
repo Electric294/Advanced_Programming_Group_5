@@ -65,9 +65,6 @@ void sendInputGoal(float x, float y){
     //Creates a variable that checks the state of the SimpleClientGoalState
     actionlib::SimpleClientGoalState stateResult = actionClient1.getState();
 
-    //This one's goal is to print the state result, but haven't figured out how to convert this to string yet.  May end up abandoning.
-    ROS_INFO("state_result: " );
-
     //Creates a variable that is the time at this point
     ros::Time startTime = ros::Time::now();
 
@@ -79,9 +76,6 @@ void sendInputGoal(float x, float y){
         stateResult = actionClient1.getState();
         elapsedTime = ros::Time::now() - startTime;
     }
-
-    //Also meant to print the state result.  May also end up abandoning
-    ROS_INFO("[Result] State: ");
 
     //Prints elapsed time once completed
     if (stateResult == actionlib::SimpleClientGoalState::SUCCEEDED){
@@ -104,16 +98,26 @@ int main(int argc, char *argv[]){
     ros::NodeHandle node;
 
     //Creates floats that will store the provided x and y
-    float in1, in2;
+    float in1 = 0, in2 = 0;
 
-    //Asks the user for provided x and y coordinates, storing them in established floats
-    std::cout << "What x coordinate would you like to go to? (1 - 10) ";
-    std::cin >> in1;
-    std::cout << "\n";
+    //Asks the user for provided x and y coordinates, storing them in established floats, printing a message if not between 1 and 10
+    do{
+        std::cout << "What x coordinate would you like to go to? (1 - 10) ";
+        std::cin >> in1;
+        std::cout << "\n";
+        if (in1 <= 1 || in1 >= 10){
+            std::cout << "Input not between 1 and 10, enter a number between 1 and 10.\n\n";
+        }
+    }while(in1 <=1 || in1 >= 10);
 
+    do{
     std::cout << "What y coordinate would you like to go to? (1 - 10) ";
     std::cin >> in2;
     std::cout << "\n";
+    if (in1 <= 1 || in1 >= 10){
+        std::cout << "Input not between 1 and 10, enter a number between 1 and 10.\n\n";
+    }
+    }while (in1 <=1 || in1 >=10);
 
     //Calls the function using the provided coordinates
     sendInputGoal(in1, in2);
