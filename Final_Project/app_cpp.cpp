@@ -111,13 +111,13 @@ int main(int argc, char *argv[]){
     }while(in1 <=1 || in1 >= 10);
 
     do{
-    std::cout << "What y coordinate would you like to go to? (1 - 10) ";
-    std::cin >> in2;
-    std::cout << "\n";
-    if (in1 <= 1 || in1 >= 10){
-        std::cout << "Input not between 1 and 10, enter a number between 1 and 10.\n\n";
-    }
-    }while (in1 <=1 || in1 >=10);
+        std::cout << "What y coordinate would you like to go to? (1 - 10) ";
+        std::cin >> in2;
+        std::cout << "\n";
+        if (in2 <= 1 || in2 >= 10){
+            std::cout << "Input not between 1 and 10, enter a number between 1 and 10.\n\n";
+        }
+    }while (in2 <=1 || in2 >=10);
 
     //Calls the function using the provided coordinates
     sendInputGoal(in1, in2);
